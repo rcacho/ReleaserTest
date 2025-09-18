@@ -40,4 +40,4 @@ jobs:
                 - type: section
                   text: 
                     type: mrkdwn
-                    text: "${{ steps.release.outputs.body }}"
+                    text: ${{ steps.release.outputs.body }}
