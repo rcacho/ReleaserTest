@@ -16,7 +16,7 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN }}
           allowUpdates: true
-          prelease: false
+          prerelease: false
           skipIfReleaseExists: false
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
