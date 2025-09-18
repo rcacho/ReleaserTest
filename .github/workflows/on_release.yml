@@ -2,7 +2,7 @@ name: Post Release Actions
 
 on:
   release:
-    types: [published]
+    types: [released]
 
 jobs:
   test_action:
