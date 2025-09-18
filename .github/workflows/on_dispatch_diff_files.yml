@@ -24,7 +24,7 @@ jobs:
         run: |
           diff=$(json-diff "${{ inputs.file-path-1 }}" "${{ inputs.file-path-2}}" || true)
           [ -n "$diff" ] && summary="$summary\n*$f*\n\`\`\`\n$diff\n\`\`\`"
-          escaped=$(jq -Rn --arg text "$diff" '$text')
+          escaped=$(jq -Rn --arg text "$summary" '$text')
           echo "diff=$escaped" >> $GITHUB_OUTPUT
       - name: Send release info
         uses: slackapi/slack-github-action@v2.1.1
