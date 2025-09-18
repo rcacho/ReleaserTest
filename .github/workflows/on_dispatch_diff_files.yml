@@ -39,4 +39,4 @@ jobs:
                 - type: section
                   text: 
                     type: mrkdwn
-                    text: ${{ steps.diff.outputs.summary }}
+                    text: ${{ steps.diff.outputs.diff }}
