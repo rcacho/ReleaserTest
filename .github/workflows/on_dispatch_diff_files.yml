@@ -22,6 +22,12 @@ jobs:
         uses: josephburnett/jd@v2.1.2
         with:
           args: ${{ inputs.file-path-1 }} ${{ inputs.file-path-2}}
+      - name: Escape new lines
+        id: escape
+        run: |
+          diff="${{ steps.diff.outputs.output }}"
+          escaped=$(jq -Rn --arg text "$diff" '$text')
+          echo "diff=$escaped" >> $GITHUB_OUTPUT
       - name: Send release info
         uses: slackapi/slack-github-action@v2.1.1
         with:
@@ -35,4 +41,4 @@ jobs:
                 - type: section
                   text: 
                     type: mrkdwn
-                    text: ${{ steps.diff.outputs.output }}
+                    text: ${{ steps.escape.outputs.diff }}
