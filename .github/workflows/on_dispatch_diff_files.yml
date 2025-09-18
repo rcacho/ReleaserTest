@@ -22,7 +22,7 @@ jobs:
         id: diff
         uses: josephburnett/jd@v2.1.2
         with:
-          args: "${{ inputs.file-path }}.pr ${{ inputs.file-path }}.base"
+          args: ${{ inputs.file-path }}.pr ${{ inputs.file-path }}.base
       - name: Escape new lines
         id: escape
         run: |
