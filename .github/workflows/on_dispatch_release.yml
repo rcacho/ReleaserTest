@@ -1,0 +1,23 @@
+name: Dispatch Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        required: true
+        description: git tag to create release on
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          prerelease: false
+          skipIfReleaseExists: false
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          generateReleaseNotes: true
