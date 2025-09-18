@@ -15,7 +15,8 @@ jobs:
       - name: Extract release info
         id: release
         run: |
-          formatted=$(echo "${${{ github.event.release.body }}//$'\n'/'%0A'}")
+          body="${{ github.event.release.body }}"
+          formatted="${body//$'\n'/%0A}"
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$formatted" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
