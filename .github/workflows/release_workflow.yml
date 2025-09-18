@@ -15,4 +15,9 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.PAT_TOKEN }}
+          allowUpdates: true
+          prelease: false
+          skipIfReleaseExists: false
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
           generateReleaseNotes: true
