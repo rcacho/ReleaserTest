@@ -16,10 +16,12 @@ jobs:
         id: release
         run: |
           body="${{ github.event.release.body }}"
-          formatted="${body//$'\n'/%0A}"
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$formatted" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Use jq to JSON-escape the body safely
+          escaped=$(jq -Rn --arg text "$body" '$text')
+
+          # escaped will look like: "line1\nline2\nline3"
+          echo "body=$escaped" >> $GITHUB_OUTPUT
       - name: Send release info
         uses: slackapi/slack-github-action@v2.1.1
         with:
@@ -37,5 +39,5 @@ jobs:
                       *<${{ github.event.release.html_url }}|See here for details>*
                 - type: section
                   text: 
-                    type: plain_text
+                    type: mrkdwn
                     text: "${{ steps.release.outputs.body }}"
