@@ -15,7 +15,7 @@ jobs:
       - name: Extract release info
         id: release
         run: |
-          formatted=$(echo "${{ github.event.release.body }}" | sed 's/ \*\*/\n**/' | sed 's/ \* /\n\n* /g')
+          formatted=$(echo "${${{ github.event.release.body }}//$'\n'/'%0A'}")
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$formatted" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
