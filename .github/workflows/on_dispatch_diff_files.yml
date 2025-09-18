@@ -17,15 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install json-diff
-        run: npm install -g json-diff
       - name: Generate diff
         id: diff
-        run: |
-          diff=$(json-diff "${{ inputs.file-path-1 }}" "${{ inputs.file-path-2}}" || true)
-          [ -n "$diff" ] && summary="$summary\n*$f*\n\`\`\`\n$diff\n\`\`\`"
-          escaped=$(jq -Rn --arg text "$summary" '$text')
-          echo "diff=$escaped" >> $GITHUB_OUTPUT
+        uses: josephburnett/jd@v2.1.2
+        with:
+          args: ${{ inputs.file-path-1 }} ${{ inputs.file-path-2}}
       - name: Send release info
         uses: slackapi/slack-github-action@v2.1.1
         with:
@@ -39,4 +35,4 @@ jobs:
                 - type: section
                   text: 
                     type: mrkdwn
-                    text: ${{ steps.diff.outputs.diff }}
+                    text: ${{ steps.diff.outputs.output }}
