@@ -15,8 +15,26 @@ jobs:
       - name: Extract release info
         id: release
         run: |
+          formatted=$(echo "${{ github.event.release.body }}" | sed 's/ \*\*/\n**/' | sed 's/ \* /\n\n* /g')
           echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "${{ github.event.release.body }}" >> $GITHUB_OUTPUT
+          echo "$formatted" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      - name: Show release info
-        run: echo "${{ steps.release.outputs.body }}"
+      - name: Send release info
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{ secrets.SLACK_WEB_HOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: 'New Release [${{ github.event.release.name }}]'
+            attachments:
+              - color: "#2c5f34"
+                blocks:
+                - type: section
+                  text:
+                    type: mrkdwn
+                    text: |-
+                      *<${{ github.event.release.html_url }}|See here for details>*
+                - type: section
+                  text: 
+                    type: plain_text
+                    text: "${{ steps.release.outputs.body }}"
