@@ -1,4 +1,15 @@
 {
     "animal": "lion",
-    "vegetable": "asparagus"
+    "vegetable": "asparagus",
+    "foobar": {"bar": {"foobar": {"bar": "foobar"}}},
+    "some_info": [
+        {
+            "code": "001",
+            "name": "nomad"
+        },
+        {
+            "code": "002",
+            "name": "for_someone"
+        }
+    ]
 }
