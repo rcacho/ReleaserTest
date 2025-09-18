@@ -3,12 +3,8 @@ name: Dispatch file diff
 on:
   workflow_dispatch:
     inputs:
-      file-path-1:
+      file-path:
         description: first file to compare
-        required: true
-        type: string
-      file-path-2:
-        description: other file to compare
         required: true
         type: string
 
@@ -17,11 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: prepare files for diffing
+        id: prepare-files
+        run: |
+          cp "${{ inputs.file-path }}" "${{ inputs.file-path }}.pr"
+          git show "origin/main:${{ inputs.file-path }}" > "${{ inputs.file-path }}.base"
       - name: Generate diff
         id: diff
         uses: josephburnett/jd@v2.1.2
         with:
-          args: ${{ inputs.file-path-1 }} ${{ inputs.file-path-2}}
+          args: "${{ inputs.file-path }}.pr ${{ inputs.file-path }}.base"
       - name: Escape new lines
         id: escape
         run: |
@@ -34,7 +35,7 @@ jobs:
           webhook: ${{ secrets.SLACK_WEB_HOOK }}
           webhook-type: incoming-webhook
           payload: |
-            text: 'File Changed[${{ inputs.file-path-1 }}]'
+            text: 'File Changed [${{ inputs.file-path }}]'
             attachments:
               - color: "#2c5f34"
                 blocks:
