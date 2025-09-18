@@ -1,0 +1,42 @@
+name: Dispatch file diff
+
+on:
+  workflow_dispatch:
+    inputs:
+      file-path-1:
+        description: first file to compare
+        required: true
+        type: string
+      file-path-2:
+        description: other file to compare
+        required: true
+        type: string
+
+jobs:
+  diff_files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install json-diff
+        run: npm install -g json-diff
+      - name: Generate diff
+        id: diff
+        run: |
+          diff=$(json-diff "${{ inputs.file-path-1 }}" "${{ inputs.file-path-2}}" || true)
+          [ -n "$diff" ] && summary="$summary\n*$f*\n\`\`\`\n$diff\n\`\`\`"
+          escaped=$(jq -Rn --arg text "$diff" '$text')
+          echo "diff=$escaped" >> $GITHUB_OUTPUT
+      - name: Send release info
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{ secrets.SLACK_WEB_HOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: 'File Changed[${{ inputs.file-path-1 }}]'
+            attachments:
+              - color: "#2c5f34"
+                blocks:
+                - type: section
+                  text: 
+                    type: mrkdwn
+                    text: ${{ steps.diff.outputs.summary }}
