@@ -15,6 +15,10 @@ jobs:
           {
             "filepath": "resources/other.json",
             "is_prod": true
+          },
+          {
+            "filepath": "resources/big_example.json",
+            "is_prod": true
           }
         ]
     steps:
