@@ -35,7 +35,7 @@ jobs:
 
             # Create PR copy (simulate new version)
             cp "$filepath" "$filepath.pr"
-            # Already have $filepath.base above
+            git show "origin/main:$filepath" > "$filepath.base"
 
             # Run diff
             diff=$(json-diff "$filepath.base" "$filepath.pr" || true)
