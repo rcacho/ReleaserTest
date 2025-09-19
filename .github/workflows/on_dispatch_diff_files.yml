@@ -39,6 +39,8 @@ jobs:
           for item in $(echo "$FILE_JSON" | jq -c '.[]'); do
             filepath=$(echo "$item" | jq -r '.filepath')
 
+            [ -f "$filepath" ] || continue
+
             # Create PR copy (simulate new version)
             cp "$filepath" "$filepath.pr"
             git show "origin/main:$filepath" > "$filepath.base" 2>/dev/null || echo '{}' > "$filepath.base"
