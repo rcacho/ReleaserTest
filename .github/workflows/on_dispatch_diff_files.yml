@@ -30,23 +30,29 @@ jobs:
         run: |
           blocks="[]"
 
-          while read -r item; do
+          for item in $(echo "$FILE_JSON" | jq -c '.[]'); do
             filepath=$(echo "$item" | jq -r '.filepath')
 
+            # Create PR copy (simulate new version)
             cp "$filepath" "$filepath.pr"
-            git show "origin/main:$filepath" > "$filepath.base"
+            # Already have $filepath.base above
 
+            # Run diff
             diff=$(json-diff "$filepath.base" "$filepath.pr" || true)
-            escaped=$(jq -Rn --arg text "$diff" '$text')
 
-            if [ -n "$escaped" ]; then
-              block=$(jq -n --arg f "$filepath" --arg d "$escaped" \
-              '{type:"section", text:{type:"mrkdwn", text:($f | "*"+.+"*\n```"+$d+"```")}}')
+            if [ -n "$diff" ]; then
+              block=$(jq -n \
+                --arg f "$filepath" \
+                --arg d "$diff" \
+                '{type:"section", text:{type:"mrkdwn", text:("*" + $f + "*\n```" + $d + "```")}}')
+
+              echo $block
+
               blocks=$(echo "$blocks" | jq ". + [$block]")
             fi
-          done <<< "$(echo "$FILE_JSON" | jq -c '.[]')"
+          done
 
-          # slack_message=$(jq -n --argjson blocks "$blocks" '{blocks:$blocks}')
+          slack_message=$(jq -n --arg text "#files changed" --argjson blocks "$blocks" '{text:$text, blocks:$blocks}')
 
           echo "slack_message=$blocks" >> $GITHUB_OUTPUT
       - name: Send release info
