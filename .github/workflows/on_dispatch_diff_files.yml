@@ -40,7 +40,8 @@ jobs:
             escaped=$(jq -Rn --arg text "$diff" '$text')
 
             if [ -n "$escaped" ]; then
-              block=$(jq -n --arg f "$filepath" --arg d "$escaped" '{type:"section", text:{type:"mrkdwn", text:("*" + $f + "*\n```" + $d + "```")}}}')
+              block=$(jq -n --arg f "$filepath" --arg d "$escaped" \
+              '{type:"section", text:{type:"mrkdwn", text:($f | "*"+.+"*\n```"+$d+"```")}}')
               blocks=$(echo "$blocks" | jq ". + [$block]")
             fi
           done <<< "$(echo "$FILE_JSON" | jq -c '.[]')"
