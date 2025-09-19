@@ -46,8 +46,10 @@ jobs:
             fi
           done <<< "$(echo "$FILE_JSON" | jq -c '.[]')"
 
-          slack_message=$(jq -n --argjson blocks "$blocks" --arg pr "#files changed" \
-              '{text:$pr, blocks:$blocks}')
+          slack_message=$(jq -n \
+            --arg text "#files changed" \
+            --argjson blocks "$blocks" \
+            '{text:$text, blocks:$blocks}')
 
           echo "slack_message=$slack_message" >> $GITHUB_OUTPUT
       - name: Send release info
