@@ -28,6 +28,9 @@ jobs:
         run: |
           blocks="[]"
 
+          echo ${{ toJson(needs) }}
+          echo ${{ toJson(needs.diff_matrix) }}
+
           for job in $(echo '${{ toJSON(needs) }}' | jq -r 'keys[]'); do
             file=$(echo '${{ toJSON(needs) }}' | jq -r ".\"$job\".outputs.file")
             diff=$(echo '${{ toJSON(needs) }}' | jq -r ".\"$job\".outputs.diff")
@@ -41,7 +44,7 @@ jobs:
             fi
           done
 
-          slack_message=$(jq -n --argjson blocks "$blocks" --arg pr "#d2c-pdstore-api resource files changed" '{text:"$pr", blocks:$blocks}')
+          slack_message=$(jq -n --argjson blocks "$blocks" --arg pr "#files changed" '{text:"$pr", blocks:$blocks}')
           echo "$slack_message" >> GITHUB_OUTPUT
 
       - name: Send release info
