@@ -29,6 +29,8 @@ jobs:
         id: collect_diffs
         run: |
           blocks="[]"
+          file_list=""
+          count=0
 
           for item in $(echo "$FILE_JSON" | jq -c '.[]'); do
             filepath=$(echo "$item" | jq -r '.filepath')
@@ -41,6 +43,7 @@ jobs:
             diff=$(json-diff "$filepath.base" "$filepath.pr" || true)
 
             if [ -n "$diff" ]; then
+              count=$((count+1))
               block=$(jq -n \
                 --arg f "$filepath" \
                 --arg d "$diff" \
@@ -54,6 +57,8 @@ jobs:
 
           slack_message=$(jq -n --arg text "#files changed" --argjson blocks "$blocks" '{text:$text, blocks:$blocks}')
 
+          echo "number_of_files_with_changes=$count" >> "$GITHUB_OUTPUT"
+
           echo 'slack_message<<EOF' >> "$GITHUB_OUTPUT"
           echo "$blocks" >> "$GITHUB_OUTPUT"
           echo 'EOF' >> "$GITHUB_OUTPUT"
@@ -63,7 +68,7 @@ jobs:
           webhook: ${{ secrets.SLACK_WEB_HOOK }}
           webhook-type: incoming-webhook
           payload: |
-            text: 'File Changed [${{ inputs.file-path }}]'
+            text: 'Repo :: ${{ steps.collect_diffs.outputs.number_of_files_with_changes }} files changed'
             attachments:
               - color: "#2c5f34"
                 blocks: ${{ steps.collect_diffs.outputs.slack_message }}
