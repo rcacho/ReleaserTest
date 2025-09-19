@@ -70,20 +70,23 @@ jobs:
           fi
 
           slack_message=$(jq -n --arg text "#files changed" --argjson blocks "$blocks" '{text:$text, blocks:$blocks}')
+          suffix=$([ "$count" -eq 1 ] && echo "file" || echo "files")
 
           echo "number_of_files_with_changes=$count" >> "$GITHUB_OUTPUT"
+          echo "file_word=$suffix" >> "$GITHUB_OUTPUT"
 
           echo 'slack_message<<EOF' >> "$GITHUB_OUTPUT"
           echo "$blocks" >> "$GITHUB_OUTPUT"
           echo 'EOF' >> "$GITHUB_OUTPUT"
       - name: Send release info
+        if: ${{ steps.collect_diffs.outputs.number_of_files_with_changes != '0' }}
         uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ secrets.SLACK_WEB_HOOK }}
           webhook-type: incoming-webhook
           payload: |
             type: 'mrkdwn'
-            text: 'Repo :: ${{ steps.collect_diffs.outputs.number_of_files_with_changes }} files changed <https://example.com|click here>'
+            text: 'Repo :: ${{ steps.collect_diffs.outputs.number_of_files_with_changes }} ${{ steps.collect_diffs.outputs.file_word }} changed <https://example.com|click here>'
             attachments:
               - color: "#2c5f34"
                 blocks: ${{ steps.collect_diffs.outputs.slack_message }}
