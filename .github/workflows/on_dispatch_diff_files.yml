@@ -76,7 +76,8 @@ jobs:
           webhook: ${{ secrets.SLACK_WEB_HOOK }}
           webhook-type: incoming-webhook
           payload: |
-            text: 'Repo :: ${{ steps.collect_diffs.outputs.number_of_files_with_changes }} files changed'
+            type: 'mrkdwn'
+            text: 'Repo :: ${{ steps.collect_diffs.outputs.number_of_files_with_changes }} files changed <https://example.com|click here>'
             attachments:
               - color: "#2c5f34"
                 blocks: ${{ steps.collect_diffs.outputs.slack_message }}
