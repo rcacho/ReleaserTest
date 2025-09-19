@@ -1,0 +1,48 @@
+name: Create Diff Summary
+
+on:
+  workflow_call:
+    inputs:
+      file-path:
+        description: first file to compare
+        required: true
+        type: string
+    outputs:
+      diff_summary:
+        description: "JSON diff summary"
+        value: ${{ jobs.diff_files.outputs.diff_summary }}
+      file-path:
+        description: the given file
+        value: ${{ jobs.diff_files.outputs.file-path }}
+
+jobs:
+  diff_files:
+    runs-on: ubuntu-latest
+    outputs:
+      diff_summary: ${{ steps.escape.outputs.diff }}
+      file-path: ${{ steps.filename.outputs.file }}
+    steps:
+      - name: output filename
+        id: filename
+        run: echo "file=${{ inputs.file-path}}" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch base
+        run: git fetch origin main
+      - name: prepare files for diffing
+        id: prepare-files
+        run: |
+          cp "${{ inputs.file-path }}" "${{ inputs.file-path }}.pr"
+          git show "origin/main:${{ inputs.file-path }}" > "${{ inputs.file-path }}.base"
+      - name: Generate diff
+        id: diff
+        uses: josephburnett/jd@v2.1.2
+        with:
+          args: ${{ inputs.file-path }}.pr ${{ inputs.file-path }}.base
+      - name: Escape new lines
+        id: escape
+        run: |
+          diff="${{ steps.diff.outputs.output }}"
+          escaped=$(jq -Rn --arg text "$diff" '$text')
+          echo "diff=$escaped" >> $GITHUB_OUTPUT

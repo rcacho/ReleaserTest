@@ -1,45 +1,89 @@
 name: Dispatch file diff
 
-on:
-  workflow_dispatch:
-    inputs:
-      file-path:
-        description: first file to compare
-        required: true
-        type: string
+on: workflow_dispatch
 
 jobs:
   diff_files:
     runs-on: ubuntu-latest
+    env:
+      FILE_JSON: |
+        [
+          {
+            "filepath": "resources/example.json",
+            "is_prod": false
+          },
+          {
+            "filepath": "resources/other.json",
+            "is_prod": true
+          },
+          {
+            "filepath": "resources/big_example.json",
+            "is_prod": true
+          }
+        ]
     steps:
       - uses: actions/checkout@v4
-      - name: prepare files for diffing
-        id: prepare-files
-        run: |
-          cp "${{ inputs.file-path }}" "${{ inputs.file-path }}.pr"
-          git show "origin/main:${{ inputs.file-path }}" > "${{ inputs.file-path }}.base"
-      - name: Generate diff
-        id: diff
-        uses: josephburnett/jd@v2.1.2
         with:
-          args: "${{ inputs.file-path }}.pr ${{ inputs.file-path }}.base"
-      - name: Escape new lines
-        id: escape
+          fetch-depth: 0
+      - name: Fetch base
+        run: git fetch origin main
+      - name: Install json-diff
+        run: npm install -g json-diff
+      - name: Collect diffs
+        id: collect_diffs
         run: |
-          diff="${{ steps.diff.outputs.output }}"
-          escaped=$(jq -Rn --arg text "$diff" '$text')
-          echo "diff=$escaped" >> $GITHUB_OUTPUT
+          blocks="[]"
+          file_list=""
+          count=0
+
+          for item in $(echo "$FILE_JSON" | jq -c '.[]'); do
+            filepath=$(echo "$item" | jq -r '.filepath')
+
+            [ -f "$filepath" ] || continue
+
+            # Create PR copy (simulate new version)
+            cp "$filepath" "$filepath.pr"
+            git show "origin/main:$filepath" > "$filepath.base" 2>/dev/null || echo '{}' > "$filepath.base"
+
+            # Run diff
+            diff=$(json-diff "$filepath.base" "$filepath.pr" || true)
+
+            if [ -n "$diff" ]; then
+              count=$((count+1))
+              file_list+=$'\n* '"$filepath"
+
+              block=$(jq -n \
+                --arg f "$filepath" \
+                --arg d "$diff" \
+                '{type:"section", text:{type:"mrkdwn", text:("*" + $f + "*\n```" + $d + "```")}}')
+
+              echo $block
+
+              blocks=$(echo "$blocks" | jq ". + [$block]")
+            fi
+          done
+
+          if [ "$count" -gt 0 ]; then
+            summary_block=$(jq -n --arg fl "$file_list" \
+              '{type:"section", text:{type:"mrkdwn", text:("Changed files:" + $fl)}}')
+            blocks=$(echo "$blocks" | jq ". | [$summary_block] + .")
+          fi
+
+          slack_message=$(jq -n --arg text "#files changed" --argjson blocks "$blocks" '{text:$text, blocks:$blocks}')
+
+          echo "number_of_files_with_changes=$count" >> "$GITHUB_OUTPUT"
+
+          echo 'slack_message<<EOF' >> "$GITHUB_OUTPUT"
+          echo "$blocks" >> "$GITHUB_OUTPUT"
+          echo 'EOF' >> "$GITHUB_OUTPUT"
       - name: Send release info
         uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ secrets.SLACK_WEB_HOOK }}
           webhook-type: incoming-webhook
           payload: |
-            text: 'File Changed [${{ inputs.file-path }}]'
+            type: 'mrkdwn'
+            text: 'Repo :: ${{ steps.collect_diffs.outputs.number_of_files_with_changes }} files changed <https://example.com|click here>'
             attachments:
               - color: "#2c5f34"
-                blocks:
-                - type: section
-                  text: 
-                    type: mrkdwn
-                    text: ${{ steps.escape.outputs.diff }}
+                blocks: ${{ steps.collect_diffs.outputs.slack_message }}
