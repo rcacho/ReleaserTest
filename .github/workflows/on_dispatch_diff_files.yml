@@ -43,7 +43,7 @@ jobs:
               block=$(jq -n --arg f "$filepath" --arg d "$escaped" '{type:"section", text:{type:"mrkdwn", text:("*" + $f + "*\n```" + $d + "```")}}}')
               blocks=$(echo "$blocks" | jq ". + [$block]")
             fi
-          done <<< "$(echo "$FILES_JSON" | jq -c '.[]')"
+          done <<< "$(echo "$FILE_JSON" | jq -c '.[]')"
 
           slack_message=$(jq -n --argjson blocks "$blocks" --arg pr "#files changed" \
               '{text:$pr, blocks:$blocks}')
