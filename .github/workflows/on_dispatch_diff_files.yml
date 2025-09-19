@@ -54,7 +54,9 @@ jobs:
 
           slack_message=$(jq -n --arg text "#files changed" --argjson blocks "$blocks" '{text:$text, blocks:$blocks}')
 
-          echo "slack_message=$blocks" >> $GITHUB_OUTPUT
+          echo 'slack_message<<EOF' >> "$GITHUB_OUTPUT"
+          echo "$blocks" >> "$GITHUB_OUTPUT"
+          echo 'EOF' >> "$GITHUB_OUTPUT"
       - name: Send release info
         uses: slackapi/slack-github-action@v2.1.1
         with:
