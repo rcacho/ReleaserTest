@@ -44,7 +44,7 @@ jobs:
 
             if [ -n "$diff" ]; then
               count=$((count+1))
-              file_list="$file_list\n* $filepath"
+              file_list+=$'\n* '"$filepath"
 
               block=$(jq -n \
                 --arg f "$filepath" \
@@ -59,8 +59,8 @@ jobs:
 
           if [ "$count" -gt 0 ]; then
             summary_block=$(jq -n --arg fl "$file_list" \
-              '{type:"section", text:{type:"mrkdwn", text:("Changed files:\n" + $fl)}}')
-            blocks=$(echo "[$summary_block]" | jq ". + $blocks")
+              '{type:"section", text:{type:"mrkdwn", text:("Changed files:" + $fl)}}')
+            blocks=$(echo "$blocks" | jq ". | [$summary_block] + .")
           fi
 
           slack_message=$(jq -n --arg text "#files changed" --argjson blocks "$blocks" '{text:$text, blocks:$blocks}')
