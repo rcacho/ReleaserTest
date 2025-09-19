@@ -30,7 +30,7 @@ jobs:
         run: |
           blocks="[]"
 
-          echo "$FILES_JSON" | jq -c '.[]' | while read item; do
+          while read -r item; do
             filepath=$(echo "$item" | jq -r '.filepath')
 
             cp "$filepath" "$filepath.pr"
@@ -43,10 +43,12 @@ jobs:
               block=$(jq -n --arg f "$filepath" --arg d "$escaped" '{type:"section", text:{type:"mrkdwn", text:("*" + $f + "*\n```" + $d + "```")}}}')
               blocks=$(echo "$blocks" | jq ". + [$block]")
             fi
-          done
+          done <<< "$(echo "$FILES_JSON" | jq -c '.[]')"
 
-          slack_message=$(jq -n --argjson blocks "$blocks" --arg pr "#files changed" '{text:"$pr", blocks:$blocks}')
-          echo "$slack_message" >> GITHUB_OUTPUT
+          slack_message=$(jq -n --argjson blocks "$blocks" --arg pr "#files changed" \
+              '{text:$pr, blocks:$blocks}')
+
+          echo "slack_message=$slack_message" >> $GITHUB_OUTPUT
       - name: Send release info
         uses: slackapi/slack-github-action@v2.1.1
         with:
