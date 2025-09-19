@@ -34,9 +34,9 @@ jobs:
             filepath=$(echo "$item" | jq -r '.filepath')
 
             cp "$filepath" "$filepath.pr"
-            git show "origin/main:$filepath" > "filepath.base"
+            git show "origin/main:$filepath" > "$filepath.base"
 
-            diff=$(json-diff old.json new.json || true)
+            diff=$(json-diff "$filepath.base" "$filepath.pr" || true)
             escaped=$(jq -Rn --arg text "$diff" '$text')
 
             if [ -n "$escaped" ]; then
