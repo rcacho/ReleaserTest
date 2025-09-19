@@ -15,7 +15,7 @@ func main() {
 	})
 
 	engine.GET("/version", func(ctx *gin.Context) {
-		ctx.Writer.WriteHeader(http.StatusOK)
+		ctx.Writer.WriteHeader(http.StatusAccepted)
 	})
 
 	if err := engine.Run(); err != nil {
