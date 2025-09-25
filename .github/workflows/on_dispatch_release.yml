@@ -15,6 +15,7 @@ jobs:
     steps:
       - uses: ncipollo/release-action@v1
         with:
+          token: ${{ secrets.PAT_TOKEN }}
           allowUpdates: true
           prerelease: false
           skipIfReleaseExists: false
