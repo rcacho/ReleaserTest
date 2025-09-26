@@ -15,7 +15,12 @@ jobs:
       - name: Extract release info
         id: release
         run: |
+          max_body_len=2500
           body="${{ github.event.release.body }}"
+
+          if [ "${#body}" -gt "$max_body_len" ]; then
+            body="${body:0:$max_body_len}\n...*(truncated, see Github for full details)*"
+          fi
 
           # Use jq to JSON-escape the body safely
           escaped=$(jq -Rn --arg text "$body" '$text')
