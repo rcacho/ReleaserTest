@@ -10,7 +10,8 @@ jobs:
         [
           "resources/example.json",
           "resources/other.json",
-          "resources/big_example.json"
+          "resources/big_example.json",
+          "resources/new_file.json"
         ]
     steps:
       - uses: actions/checkout@v4
