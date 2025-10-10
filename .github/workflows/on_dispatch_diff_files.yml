@@ -43,7 +43,7 @@ jobs:
                   diff=$(json-diff "$filepath.base" "$filepath.pr" || true)
               else
                   diff=$(diff -u "$filepath.base" "$filepath.pr" || true)
-                  if [ "$pr_valid" = false ]; then
+                  if [-n "$diff" ] && [ "$pr_valid" = false ]; then
                     diff="*(Invalid JSON was added)*
                     ${diff}"
                   fi
