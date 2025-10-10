@@ -39,13 +39,13 @@ jobs:
               jq empty "$filepath.pr" >/dev/null 2>&1 || pr_valid=false
               jq empty "$filepath.base" >/dev/null 2>&1 || base_valid=false
 
+              invalid_msg=""
               if [ "$pr_valid" = true ] && [ "$base_valid" = true ]; then
                   diff=$(json-diff "$filepath.base" "$filepath.pr" || true)
               else
                   diff=$(diff -u "$filepath.base" "$filepath.pr" || true)
                   if [ -n "$diff" ] && [ "$pr_valid" = false ]; then
-                    diff="*(Invalid JSON was added)*
-                    ${diff}"
+                    invalid_msg=" *(Invalid JSON was added)*"
                   fi
               fi
 
@@ -59,7 +59,7 @@ jobs:
                   fi
 
                   block=$(jq -n \
-                      --arg f "$filepath" \
+                      --arg f "$filepath$invalid_msg" \
                       --arg d "$diff" \
                       '{type:"section", text:{type:"mrkdwn", text:("*" + $f + "*\n```" + $d + "```")}}')
 
