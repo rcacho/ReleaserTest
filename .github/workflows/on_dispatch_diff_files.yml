@@ -8,18 +8,9 @@ jobs:
     env:
       FILE_JSON: |
         [
-          {
-            "filepath": "resources/example.json",
-            "is_prod": false
-          },
-          {
-            "filepath": "resources/other.json",
-            "is_prod": true
-          },
-          {
-            "filepath": "resources/big_example.json",
-            "is_prod": true
-          }
+          "resources/example.json",
+          "resources/other.json",
+          "resources/big_example.json"
         ]
     steps:
       - uses: actions/checkout@v4
@@ -36,31 +27,45 @@ jobs:
           file_list=""
           count=0
 
-          for item in $(echo "$FILE_JSON" | jq -c '.[]'); do
-            filepath=$(echo "$item" | jq -r '.filepath')
+          for filepath in $(echo "$FILE_JSON" | jq -r '.[]'); do
+              [ -f "$filepath" ] || continue
 
-            [ -f "$filepath" ] || continue
+              cp "$filepath" "$filepath.pr"
+              git show "origin/main:$filepath" > "$filepath.base" 2>/dev/null || echo '{}' > "$filepath.base"
 
-            # Create PR copy (simulate new version)
-            cp "$filepath" "$filepath.pr"
-            git show "origin/main:$filepath" > "$filepath.base" 2>/dev/null || echo '{}' > "$filepath.base"
+              pr_valid=true
+              base_valid=true
 
-            # Run diff
-            diff=$(json-diff "$filepath.base" "$filepath.pr" || true)
+              jq empty "$filepath.pr" >/dev/null 2>&1 || pr_valid=false
+              jq empty "$filepath.base" >/dev/null 2>&1 || base_valid=false
 
-            if [ -n "$diff" ]; then
-              count=$((count+1))
-              file_list+=$'\n* '"$filepath"
+              if [ "$pr_valid" = true ] && [ "$base_valid" = true ]; then
+                  diff=$(json-diff "$filepath.base" "$filepath.pr" || true)
+              else
+                  diff=$(diff -u "$filepath.base" "$filepath.pr" || true)
+                  if [ "$pr_valid" = false ]; then
+                    diff="*(Invalid JSON was added)*
+                    ${diff}"
+                  fi
+              fi
 
-              block=$(jq -n \
-                --arg f "$filepath" \
-                --arg d "$diff" \
-                '{type:"section", text:{type:"mrkdwn", text:("*" + $f + "*\n```" + $d + "```")}}')
+              if [ -n "$diff" ]
+                  count=$((count+1))
+                  file_list+=$'\n* '"$filepath"
 
-              echo $block
+                  if [ "${#diff}" -gt "$max_diff_len" ]; then
+                      diff="${diff:0:$max_diff_len}
+                      ...*(truncated, see GitHub for full diff)*"
+                  fi
 
-              blocks=$(echo "$blocks" | jq ". + [$block]")
-            fi
+                  block=$(jq -n \
+                      --arg f "$filepath" \
+                      --arg d "$diff" \
+                      '{type:"section", text:{type:"mrkdwn", text:("*" + $f + "*\n```" + $d + "```")}}')
+
+                  echo "$block"
+                  blocks=$(echo "$blocks" | jq ". + [$block]")
+              fi
           done
 
           if [ "$count" -gt 0 ]; then
