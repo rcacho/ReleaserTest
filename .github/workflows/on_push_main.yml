@@ -3,7 +3,7 @@ name: Update Main
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   create-version:
