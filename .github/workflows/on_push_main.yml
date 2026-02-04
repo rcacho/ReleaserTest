@@ -22,5 +22,4 @@ jobs:
           extra_plugins: |
             conventional-changelog-conventionalcommits
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
