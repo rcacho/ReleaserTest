@@ -18,7 +18,7 @@ func main() {
 		ctx.Writer.WriteHeader(http.StatusOK)
 	})
 
-	engine.GET("/barfoo", func(ctx *gin.Context) {
+	engine.GET("/foofoo", func(ctx *gin.Context) {
 		ctx.Writer.WriteHeader(http.StatusOK)
 	})
 
