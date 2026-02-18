@@ -18,6 +18,10 @@ func main() {
 		ctx.Writer.WriteHeader(http.StatusOK)
 	})
 
+	engine.GET("/extrathing", func(ctx *gin.Context) {
+		ctx.Writer.WriteHeader(http.StatusOK)
+	})
+
 	if err := engine.Run(); err != nil {
 		log.Println(err)
 	}
